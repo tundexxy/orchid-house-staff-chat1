@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Arial, sans-serif; background:#f7f0f9; color:#2c1338; }
+.app { max-width: 720px; margin: 0 auto; padding: 16px; }
+header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card { background:#fff; border:1px solid #d9c7e6; border-radius:16px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+.hidden { display:none; }
+
+#usernamePanel { display:flex; gap:8px; align-items:center; }
+#username { flex:1; padding:10px; border-radius:10px; border:1px solid #d9c7e6; background:#fff; color:#2c1338; }
+#joinBtn, button[type="submit"] { padding:10px 14px; border:none; border-radius:12px; background:#a855f7; color:white; cursor:pointer; }
+#joinBtn:hover, button[type="submit"]:hover { filter:brightness(1.1); }
+
+#messages { list-style:none; padding:0; margin:0; max-height: 60vh; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+.message { padding:10px 12px; border-radius:12px; background:#f0e6f9; border:1px solid #d9c7e6; }
+.message .meta { font-size:12px; color:#6b21a8; margin-bottom:4px; }
+.message .text { white-space:pre-wrap; word-wrap:break-word; }
+
+.system { text-align:center; color:#6b21a8; font-size:12px; }
+
+#form { display:flex; gap:8px; margin-top:10px; }
+#input { flex:1; padding:10px; border-radius:10px; border:1px solid #d9c7e6; background:#fff; color:#2c1338; }
+
+#typing { min-height: 18px; font-size: 12px; color:#6b21a8; margin-top:6px; }

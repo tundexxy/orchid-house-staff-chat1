@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orchid House Staff Chat</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🌸 Orchid House Staff Chat</h1>
+      <div id="status">Not connected</div>
+    </header>
+
+    <section id="usernamePanel" class="card">
+      <label for="username">Choose a username</label>
+      <input id="username" placeholder="e.g., Ada" maxlength="30" />
+      <button id="joinBtn">Join</button>
+    </section>
+
+    <section id="chatPanel" class="card hidden">
+      <ul id="messages"></ul>
+      <div id="typing"></div>
+      <form id="form" autocomplete="off">
+        <input id="input" placeholder="Type a message..." maxlength="1000" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>
