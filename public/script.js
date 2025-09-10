@@ -1,101 +1,87 @@
-const socket = io(); // connects to same host/port as served page
+const socket = io();
 
-const statusEl = document.getElementById("status");
-const usernamePanel = document.getElementById("usernamePanel");
-const chatPanel = document.getElementById("chatPanel");
-const usernameInput = document.getElementById("username");
+let username = localStorage.getItem("username") || "";
+let avatar = localStorage.getItem("avatar") || "";
+
+// Elements
+const setupDiv = document.getElementById("setup");
+const chatDiv = document.getElementById("chat");
+const usernameInput = document.getElementById("usernameInput");
+const avatarInput = document.getElementById("avatarInput");
 const joinBtn = document.getElementById("joinBtn");
-
-const messagesEl = document.getElementById("messages");
-const typingEl = document.getElementById("typing");
 const form = document.getElementById("form");
 const input = document.getElementById("input");
+const messages = document.getElementById("messages");
 
-let myName = null;
-let typingTimeout = null;
+// Join chat
+joinBtn.onclick = () => {
+  username = usernameInput.value.trim();
+  if (!username) {
+    alert("Please enter your name");
+    return;
+  }
 
-socket.on("connect", () => {
-  statusEl.textContent = "Connected";
-});
-
-socket.on("disconnect", () => {
-  statusEl.textContent = "Disconnected";
-});
-
-// system announcements
-socket.on("system", (text) => {
-  const li = document.createElement("li");
-  li.className = "system";
-  li.textContent = text;
-  messagesEl.appendChild(li);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-});
-
-// online users (optional)
-socket.on("onlineUsers", (names) => {
-  console.log("Online:", names);
-});
-
-// incoming chat message
-socket.on("chat", (msg) => {
-  addMessage(msg.user, msg.text, msg.ts);
-});
-
-// typing indicator
-socket.on("typing", ({ user, isTyping }) => {
-  if (isTyping) {
-    typingEl.textContent = `${user} is typing…`;
+  // Handle avatar upload
+  if (avatarInput.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatar = e.target.result;
+      saveAndEnter();
+    };
+    reader.readAsDataURL(avatarInput.files[0]);
   } else {
-    typingEl.textContent = "";
+    saveAndEnter();
+  }
+};
+
+function saveAndEnter() {
+  localStorage.setItem("username", username);
+  localStorage.setItem("avatar", avatar);
+
+  setupDiv.style.display = "none";
+  chatDiv.style.display = "flex";
+}
+
+// Send message
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+  if (input.value) {
+    socket.emit("chat message", {
+      username,
+      avatar,
+      message: input.value
+    });
+    input.value = "";
   }
 });
 
-joinBtn.addEventListener("click", joinChat);
-usernameInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") joinChat();
+// Receive chat history
+socket.on("chat history", (history) => {
+  messages.innerHTML = "";
+  history.forEach(addMessage);
 });
 
-function joinChat() {
-  const name = usernameInput.value.trim() || "Anonymous";
-  myName = name;
-  socket.emit("join", name);
-  usernamePanel.classList.add("hidden");
-  chatPanel.classList.remove("hidden");
-  input.focus();
-}
-
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const text = input.value.trim();
-  if (!text) return;
-  socket.emit("chat", text);
-  input.value = "";
-  socket.emit("typing", false);
+// Receive new message
+socket.on("chat message", (msg) => {
+  addMessage(msg);
 });
 
-input.addEventListener("input", () => {
-  socket.emit("typing", true);
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit("typing", false);
-  }, 800);
-});
-
-function addMessage(user, text, ts) {
+// Display message
+function addMessage(msg) {
   const li = document.createElement("li");
-  li.className = "message";
 
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  const when = new Date(ts || Date.now()).toLocaleTimeString();
-  meta.textContent = `${user} • ${when}`;
+  const avatarImg = msg.avatar
+    ? `<img src="${msg.avatar}" class="avatar" />`
+    : `<div class="avatar placeholder">${msg.username[0]}</div>`;
 
-  const body = document.createElement("div");
-  body.className = "text";
-  body.textContent = text;
+  li.innerHTML = `
+    ${avatarImg}
+    <div class="msg-content">
+      <strong>${msg.username}</strong><br />
+      ${msg.message}
+    </div>
+  `;
 
-  li.appendChild(meta);
-  li.appendChild(body);
-  messagesEl.appendChild(li);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  messages.appendChild(li);
+  messages.scrollTop = messages.scrollHeight;
 }

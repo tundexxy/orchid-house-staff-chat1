@@ -2,34 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Orchid House Staff Chat</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌸 Orchid House Staff Chat</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
+  <div class="chat-container">
+    <!-- Header -->
     <header>
       <h1>🌸 Orchid House Staff Chat</h1>
-      <div id="status">Not connected</div>
     </header>
 
-    <section id="usernamePanel" class="card">
-      <label for="username">Choose a username</label>
-      <input id="username" placeholder="e.g., Ada" maxlength="30" />
-      <button id="joinBtn">Join</button>
-    </section>
+    <!-- Setup screen -->
+    <div id="setup">
+      <input type="text" id="usernameInput" placeholder="Enter your name" required />
+      <input type="file" id="avatarInput" accept="image/*" />
+      <button id="joinBtn">Join Chat</button>
+    </div>
 
-    <section id="chatPanel" class="card hidden">
+    <!-- Chat screen -->
+    <div id="chat" style="display: none;">
       <ul id="messages"></ul>
-      <div id="typing"></div>
-      <form id="form" autocomplete="off">
-        <input id="input" placeholder="Type a message..." maxlength="1000" />
-        <button type="submit">Send</button>
+      <form id="form">
+        <input id="input" autocomplete="off" placeholder="Type your message..." />
+        <button>Send</button>
       </form>
-    </section>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

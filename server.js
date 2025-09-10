@@ -1,8 +1,7 @@
-// server.js
-const path = require("path");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const mongoose = require("mongoose");
 
 const app = express();
 const server = http.createServer(app);
@@ -10,45 +9,48 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-// serve files from /public
-app.use(express.static(path.join(__dirname, "public")));
+// 🟣 Connect to MongoDB Atlas
+mongoose.connect("mongodb+srv://orchidstaff:orchid123@cluster0.snz31sr.mongodb.net/orchidchat?retryWrites=true&w=majority&appName=Cluster0", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ Connected to MongoDB Atlas"))
+.catch(err => console.error("❌ MongoDB connection error:", err));
 
-const users = new Map(); // socket.id -> username
+// Schema for saving messages
+const chatSchema = new mongoose.Schema({
+  username: String,
+  avatar: String,   // profile picture (base64 string)
+  message: String,
+  timestamp: { type: Date, default: Date.now }
+});
 
-io.on("connection", (socket) => {
+const Chat = mongoose.model("Chat", chatSchema);
+
+app.use(express.static("public"));
+
+// Socket.io handling
+io.on("connection", async (socket) => {
   console.log("a user connected", socket.id);
 
-  // user joins with a chosen name
-  socket.on("join", (username) => {
-    const cleanName = String(username || "Anonymous").trim().slice(0, 30);
-    users.set(socket.id, cleanName);
-    socket.broadcast.emit("system", `${cleanName} joined Orchid House Staff Chat`);
-    io.to(socket.id).emit("onlineUsers", Array.from(users.values()));
-  });
+  // Load chat history (last 100 messages)
+  const history = await Chat.find().sort({ timestamp: 1 }).limit(100);
+  socket.emit("chat history", history);
 
-  // incoming chat message
-  socket.on("chat", (text) => {
-    const user = users.get(socket.id) || "Anonymous";
-    const message = {
-      user,
-      text: String(text || "").slice(0, 1000),
-      ts: Date.now(),
-    };
-    io.emit("chat", message);
-  });
+  // Save new message
+  socket.on("chat message", async (msg) => {
+    const newMsg = new Chat({
+      username: msg.username,
+      avatar: msg.avatar,
+      message: msg.message,
+    });
+    await newMsg.save();
 
-  // typing indicator
-  socket.on("typing", (isTyping) => {
-    const user = users.get(socket.id) || "Someone";
-    socket.broadcast.emit("typing", { user, isTyping: !!isTyping });
+    io.emit("chat message", msg);
   });
 
   socket.on("disconnect", () => {
-    const name = users.get(socket.id);
-    users.delete(socket.id);
-    if (name) {
-      socket.broadcast.emit("system", `${name} left Orchid House Staff Chat`);
-    }
+    console.log("user disconnected", socket.id);
   });
 });
 
