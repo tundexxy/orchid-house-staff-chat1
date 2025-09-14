@@ -12,8 +12,15 @@ const joinBtn = document.getElementById("joinBtn");
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
+const typingDiv = document.getElementById("typing");
 
-// Join chat
+// Auto-login if already saved
+if (username) {
+  setupDiv.style.display = "none";
+  chatDiv.style.display = "flex";
+}
+
+// Join chat manually
 joinBtn.onclick = () => {
   username = usernameInput.value.trim();
   if (!username) {
@@ -21,7 +28,6 @@ joinBtn.onclick = () => {
     return;
   }
 
-  // Handle avatar upload
   if (avatarInput.files.length > 0) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -46,13 +52,25 @@ function saveAndEnter() {
 form.addEventListener("submit", function (e) {
   e.preventDefault();
   if (input.value) {
-    socket.emit("chat message", {
+    const msg = {
       username,
       avatar,
       message: input.value
-    });
+    };
+
+    // Show immediately
+    addMessage(msg);
+
+    // Send to server
+    socket.emit("chat message", msg);
+
     input.value = "";
   }
+});
+
+// Typing indicator
+input.addEventListener("input", () => {
+  socket.emit("typing", username);
 });
 
 // Receive chat history
@@ -64,6 +82,14 @@ socket.on("chat history", (history) => {
 // Receive new message
 socket.on("chat message", (msg) => {
   addMessage(msg);
+});
+
+// Show typing indicator
+socket.on("typing", (user) => {
+  typingDiv.innerText = `${user} is typing...`;
+  setTimeout(() => {
+    typingDiv.innerText = "";
+  }, 2000);
 });
 
 // Display message
